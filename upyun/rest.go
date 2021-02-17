@@ -180,21 +180,6 @@ func (up *UpYun) Mkdir(path string) error {
 }
 
 func (up *UpYun) GetBody(config *GetObjectConfig) (io.ReadCloser, error) {
-	if config.LocalPath != "" {
-		var fd *os.File
-		if f, err := os.Create(config.LocalPath); err != nil {
-			return nil, errorOperation("create file", err)
-		} else {
-			fd = f
-		}
-		defer fd.Close()
-		config.Writer = fd
-	}
-
-	if config.Writer == nil {
-		return nil, errors.New("no writer")
-	}
-
 	resp, err := up.doRESTRequest(&restReqConfig{
 		method: "GET",
 		uri:    config.Path,
