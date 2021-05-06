@@ -17,9 +17,9 @@ import (
 )
 
 const (
-	DefaultPartSize      = 1024 * 1024
 	MaxPartNum           = 10000
-	minResumePutFileSize = 10 * 1024 * 1024
+	minResumePutFileSize = 50 * 1024 * 1024
+	DefaultPartSize      = minResumePutFileSize
 )
 
 type restReqConfig struct {
