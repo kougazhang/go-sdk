@@ -232,6 +232,7 @@ type UpYunConfig struct {
         Operator  string                // 操作员
         Password  string                // 密码
         Secret    string                // 表单上传密钥，已经弃用！
+        // 公网地址 v0.api.upyun.com，可以通过此项配置把公网地址映射到内网
         Hosts     map[string]string     // 自定义 Hosts 映射关系
         UserAgent string                // HTTP User-Agent 头，默认 "UPYUN Go SDK V2"
 }
