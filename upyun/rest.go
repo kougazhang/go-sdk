@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -20,7 +21,18 @@ const (
 	MaxPartNum           = 10000
 	minResumePutFileSize = 50 * 1024 * 1024
 	DefaultPartSize      = minResumePutFileSize
+	errHead404           = "HEAD 404"
+	errHead401           = "HEAD 401"
+	err401V3             = "status=401"
+	err404V3             = "status=404"
 )
+
+var notExistedErr = []string{
+	errHead404,
+	errHead401,
+	err404V3,
+	err401V3,
+}
 
 type restReqConfig struct {
 	method    string
@@ -215,9 +227,9 @@ func (up *UpYun) Get(config *GetObjectConfig) (fInfo *FileInfo, err error) {
 	defer resp.Body.Close()
 
 	fInfo = parseHeaderToFileInfo(resp.Header, false)
-	fInfo.Name = config.Path
+	fInfo.FileName = config.Path
 
-	if fInfo.Size, err = io.Copy(config.Writer, resp.Body); err != nil {
+	if fInfo.FileSize, err = io.Copy(config.Writer, resp.Body); err != nil {
 		return nil, errorOperation("io copy", err)
 	}
 	return
@@ -542,6 +554,7 @@ func (up *UpYun) Delete(config *DeleteObjectConfig) error {
 	return nil
 }
 
+// Deprecated: Use Stat instead.
 func (up *UpYun) GetInfo(path string) (*FileInfo, error) {
 	resp, err := up.doRESTRequest(&restReqConfig{
 		method:    "HEAD",
@@ -552,8 +565,63 @@ func (up *UpYun) GetInfo(path string) (*FileInfo, error) {
 		return nil, errorOperation("get info", err)
 	}
 	fInfo := parseHeaderToFileInfo(resp.Header, true)
-	fInfo.Name = path
+	fInfo.FileName = path
 	return fInfo, nil
+}
+
+func IsNotExistedErr(err error) bool {
+	for _, item := range notExistedErr {
+		err := err.Error()
+		if strings.Contains(err, item) {
+			return true
+		}
+	}
+	return false
+}
+
+func (up *UpYun) Stat(name string) (*FileInfo, error) {
+	info, err := up.GetInfo(name)
+	if err == nil {
+		return info, nil
+	}
+	if IsNotExistedErr(err) {
+		return nil, os.ErrNotExist
+	}
+	return nil, fmt.Errorf("GetInfo %s err %v", name, err)
+}
+
+func (up *UpYun) Walk(root string, walkFn filepath.WalkFunc) error {
+	fInfoChan := make(chan *FileInfo, 50)
+	errChan := make(chan error)
+	objectsConfig := &GetObjectsConfig{
+		Path:        root,
+		ObjectsChan: fInfoChan,
+		DescOrder:   false,
+	}
+
+	if _, err := up.Stat(root); err != nil {
+		return os.ErrNotExist
+	}
+
+	go func() {
+		errChan <- up.List(objectsConfig)
+	}()
+
+	for {
+		select {
+		case err := <-errChan:
+			return err
+		case fInfo := <-fInfoChan:
+			if fInfo == nil {
+				return nil
+			}
+
+			err := walkFn(filepath.Join(root, fInfo.FileName), fInfo, nil)
+			if err != nil {
+				return err
+			}
+		}
+	}
 }
 
 func (up *UpYun) List(config *GetObjectsConfig) error {
@@ -613,9 +681,9 @@ func (up *UpYun) List(config *GetObjectsConfig) error {
 			return errorOperation("list read body", err)
 		}
 		for _, fInfo := range files {
-			if fInfo.IsDir && (config.level+1 < config.MaxListLevel || config.MaxListLevel == -1) {
+			if fInfo.IsFileDir && (config.level+1 < config.MaxListLevel || config.MaxListLevel == -1) {
 				rConfig := &GetObjectsConfig{
-					Path:           path.Join(config.Path, fInfo.Name),
+					Path:           path.Join(config.Path, fInfo.FileName),
 					QuitChan:       config.QuitChan,
 					ObjectsChan:    config.ObjectsChan,
 					MaxListTries:   config.MaxListTries,
@@ -623,7 +691,7 @@ func (up *UpYun) List(config *GetObjectsConfig) error {
 					DescOrder:      config.DescOrder,
 					MaxListLevel:   config.MaxListLevel,
 					level:          config.level + 1,
-					rootDir:        path.Join(config.rootDir, fInfo.Name),
+					rootDir:        path.Join(config.rootDir, fInfo.FileName),
 					try:            config.try,
 					objNum:         config.objNum,
 				}
@@ -637,7 +705,7 @@ func (up *UpYun) List(config *GetObjectsConfig) error {
 				config.try, config.objNum = rConfig.try, rConfig.objNum
 			}
 			if config.rootDir != "" {
-				fInfo.Name = path.Join(config.rootDir, fInfo.Name)
+				fInfo.FileName = path.Join(config.rootDir, fInfo.FileName)
 			}
 
 			select {

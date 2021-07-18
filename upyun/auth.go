@@ -26,32 +26,32 @@ type UnifiedAuthConfig struct {
 	ContentMD5 string
 }
 
-func (u *UpYun) MakeRESTAuth(config *RESTAuthConfig) string {
+func (up *UpYun) MakeRESTAuth(config *RESTAuthConfig) string {
 	sign := []string{
 		config.Method,
 		config.Uri,
 		config.DateStr,
 		config.LengthStr,
-		u.Password,
+		up.Password,
 	}
-	return "UpYun " + u.Operator + ":" + md5Str(strings.Join(sign, "&"))
+	return "UpYun " + up.Operator + ":" + md5Str(strings.Join(sign, "&"))
 }
 
-func (u *UpYun) MakePurgeAuth(config *PurgeAuthConfig) string {
+func (up *UpYun) MakePurgeAuth(config *PurgeAuthConfig) string {
 	sign := []string{
 		config.PurgeList,
-		u.Bucket,
+		up.Bucket,
 		config.DateStr,
-		u.Password,
+		up.Password,
 	}
-	return "UpYun " + u.Bucket + ":" + u.Operator + ":" + md5Str(strings.Join(sign, "&"))
+	return "UpYun " + up.Bucket + ":" + up.Operator + ":" + md5Str(strings.Join(sign, "&"))
 }
 
-func (u *UpYun) MakeFormAuth(policy string) string {
-	return md5Str(base64ToStr([]byte(policy)) + "&" + u.Secret)
+func (up *UpYun) MakeFormAuth(policy string) string {
+	return md5Str(base64ToStr([]byte(policy)) + "&" + up.Secret)
 }
 
-func (u *UpYun) MakeProcessAuth(kwargs map[string]string) string {
+func (up *UpYun) MakeProcessAuth(kwargs map[string]string) string {
 	keys := []string{}
 	for k := range kwargs {
 		keys = append(keys, k)
@@ -62,10 +62,10 @@ func (u *UpYun) MakeProcessAuth(kwargs map[string]string) string {
 	for _, k := range keys {
 		auth += k + kwargs[k]
 	}
-	return fmt.Sprintf("UpYun %s:%s", u.Operator, md5Str(u.Operator+auth+u.Password))
+	return fmt.Sprintf("UpYun %s:%s", up.Operator, md5Str(up.Operator+auth+up.Password))
 }
 
-func (u *UpYun) MakeUnifiedAuth(config *UnifiedAuthConfig) string {
+func (up *UpYun) MakeUnifiedAuth(config *UnifiedAuthConfig) string {
 	sign := []string{
 		config.Method,
 		config.Uri,
@@ -79,6 +79,6 @@ func (u *UpYun) MakeUnifiedAuth(config *UnifiedAuthConfig) string {
 			signNoEmpty = append(signNoEmpty, v)
 		}
 	}
-	signStr := base64ToStr(hmacSha1(u.Password, []byte(strings.Join(signNoEmpty, "&"))))
-	return "UpYun " + u.Operator + ":" + signStr
+	signStr := base64ToStr(hmacSha1(up.Password, []byte(strings.Join(signNoEmpty, "&"))))
+	return "UpYun " + up.Operator + ":" + signStr
 }
