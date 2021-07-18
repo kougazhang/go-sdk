@@ -2,13 +2,13 @@
 
 [![API Reference](https://img.shields.io/badge/api-reference-blue.svg)](https://help.upyun.com/docs/storage/)
 ![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/upyun/go-sdk?label=latest%20release)
-![Build](https://github.com/upyun/go-sdk/workflows/Build/badge.svg)
-![Lint](https://github.com/upyun/go-sdk/workflows/lint/badge.svg)
-![Test](https://github.com/upyun/go-sdk/workflows/test/badge.svg)
-[![Go Report Card](https://goreportcard.com/badge/github.com/upyun/go-sdk)](https://goreportcard.com/report/github.com/upyun/go-sdk)
-[![Sourcegraph](https://sourcegraph.com/github.com/upyun/go-sdk/-/badge.svg)](https://sourcegraph.com/github.com/upyun/go-sdk?badge)
+![Build](https://github.com/kougazhang/go-sdk/workflows/Build/badge.svg)
+![Lint](https://github.com/kougazhang/go-sdk/workflows/lint/badge.svg)
+![Test](https://github.com/kougazhang/go-sdk/workflows/test/badge.svg)
+[![Go Report Card](https://goreportcard.com/badge/github.com/kougazhang/go-sdk)](https://goreportcard.com/report/github.com/kougazhang/go-sdk)
+[![Sourcegraph](https://sourcegraph.com/github.com/kougazhang/go-sdk/-/badge.svg)](https://sourcegraph.com/github.com/kougazhang/go-sdk?badge)
 
-    import "github.com/upyun/go-sdk/v3/upyun/"
+    import "github.com/kougazhang/go-sdk/v3/upyun/"
 
 又拍云 Go SDK, 集成：
 
@@ -71,7 +71,7 @@ package main
 
 import (
     "fmt"
-    "github.com/upyun/go-sdk/v3/upyun"
+    "github.com/kougazhang/go-sdk/v3/upyun"
 )
 
 func main() {

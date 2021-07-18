@@ -8,7 +8,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/upyun/go-sdk/v3/upyun"
+	"github.com/kougazhang/go-sdk/v3/upyun"
 )
 
 func asyncProcess(appName string, accept string, source string, tasks []interface{}) {
